@@ -1,58 +1,60 @@
-# NRW Hitzewarnungs-Karte
+Here is the English translation of your README file, keeping the structure and technical details intact.
 
-Tägliche automatische Visualisierung der DWD-Hitzewarnungen für alle 53 Kreise und kreisfreien Städte in Nordrhein-Westfalen.
+-----
 
-![Hitzekarte NRW](Hitzekarte_NRW_heute.jpg)
+# NRW Heat Warning Map
 
-## Funktionsweise
+Daily automated visualization of DWD (German Weather Service) heat warnings for all 53 districts and independent cities in North Rhine-Westphalia.
 
-Jeden Morgen um 08:15 UTC startet ein GitHub-Actions-Workflow und durchläuft folgende Schritte:
+## How It Works
 
-1. **Datenabruf** – `hwtrend_YYYYMMDD.json` wird direkt vom DWD Open Data Portal geladen. Die Datei erscheint täglich um ca. 08:00 UTC; der 15-minütige Puffer stellt sicher, dass sie vollständig verfügbar ist.
-2. **Merge** – Jeder der 53 NRW-Kreise wird über sein AGS-Kürzel auf den zugehörigen DWD-Warnkreis-Schlüssel (CCC) gemappt. Die Zuordnung basiert auf der offiziellen `cap_warncellids.csv` des DWD (Spalte `CCC`, gefiltert auf `BL = NW` und WARNCELLID-Präfix `105`).
-3. **Karte** – Das Sentinel-2-Satellitenbild (GeoTIFF, georeferenziert) dient als Hintergrund. Die 53 Kreisflächen werden mit 70 % Deckkraft eingefärbt, je nach Warnstufe des Tages (`Trend[0]`). NRW ist vertikal zentriert und nimmt ca. 620 von 640 Pixeln Höhe ein.
-4. **Legende** – Zeigt die aktuellen Warnstufen mit der tagesaktuellen Anzahl betroffener Kreise. Der rechte Legendenrand schließt bündig mit dem östlichen NRW-Rand ab.
-5. **Commit** – Die fertige Karte wird als `Hitzekarte_NRW_heute.jpg` (1280 × 640 px) automatisch ins Repository committed.
+Every morning at 08:15 UTC, a GitHub Actions workflow triggers and executes the following steps:
 
-## Warnstufen
+1.  **Data Retrieval** – `hwtrend_YYYYMMDD.json` is downloaded directly from the DWD Open Data Portal. The file is usually published around 08:00 UTC; the 15-minute buffer ensures it is fully available.
+2.  **Merge** – Each of the 53 NRW districts is mapped to its corresponding DWD warning cell ID (CCC) via its AGS code. This assignment is based on the official DWD `cap_warncellids.csv` (column `CCC`, filtered for `BL = NW` and WARNCELLID prefix `105`).
+3.  **Map Generation** – A Sentinel-2 satellite image (GeoTIFF, georeferenced) serves as the background. The 53 district areas are overlaid with 70% opacity, colored according to the day's warning level (`Trend[0]`). NRW is vertically centered, occupying approximately 620 of the 640-pixel height.
+4.  **Legend** – Displays the current warning levels along with the daily count of affected districts. The right edge of the legend is flush with the eastern border of NRW.
+5.  **Commit** – The final map is automatically committed to the repository as `Hitzekarte_NRW_heute.jpg` (1280 × 640 px).
 
-Die DWD-Warnstufen aus `Trend[0]` werden wie folgt dargestellt. Trendwerte (Stufen 3–7) für Folgetage werden auf die nächste Warnstufe gerundet und in der Karte nur für den heutigen Tag (`Trend[0]`) verwendet.
+## Warning Levels
 
-| Stufe | Farbe | Hex | Bedeutung |
+The DWD warning levels from `Trend[0]` are represented as follows. Trend values (levels 3–7) for subsequent days are rounded to the nearest warning level and used in the map only for the current day (`Trend[0]`).
+
+| Level | Color | Hex | Meaning |
 |-------|-------|-----|-----------|
-| 0 | ⬜ Weiß (70 % Deckkraft) | `#ffffff` | Keine Warnung |
-| 1 | 🟣 Hellviolett (70 % Deckkraft) | `#cc99ff` | Starke Wärmebelastung |
-| 2 | 🟣 Dunkelviolett (70 % Deckkraft) | `#9e46f8` | Extreme Wärmebelastung |
-| 3 | — | — | Hitzetrend aktiv (nicht mehr verwendet → wird als 0 behandelt) |
-| 4–5 | wie Stufe 1 | | Hitzetrend: Warnung Stufe 1 gering/wahrscheinlich |
-| 6–7 | wie Stufe 2 | | Hitzetrend: Warnung Stufe 2 gering/wahrscheinlich |
+| 0 | ⬜ White (70% Opacity) | `#ffffff` | No warning |
+| 1 | 🟣 Light Purple (70% Opacity) | `#cc99ff` | Strong heat stress |
+| 2 | 🟣 Dark Purple (70% Opacity) | `#9e46f8` | Extreme heat stress |
+| 3 | — | — | Heat trend active (no longer used → treated as 0) |
+| 4–5 | Same as Level 1 | | Heat trend: Level 1 warning low/likely |
+| 6–7 | Same as Level 2 | | Heat trend: Level 2 warning low/likely |
 
-## Repo-Struktur
+## Repository Structure
 
 ```
-├── generate_map.py          # Hauptskript (Datenabruf, Merge, Rendering)
-├── requirements.txt         # pip-Abhängigkeiten (kein Conda)
-├── landkreise.geojson       # NRW-Kreisgrenzen auf Kreisebene (BKG)
+├── generate_map.py          # Main script (Data retrieval, merging, rendering)
+├── requirements.txt         # pip dependencies (no Conda)
+├── landkreise.geojson       # NRW district boundaries (BKG)
 ├── background.tiff          # Sentinel-2 True Color Cloudless Mosaic (georef.)
-├── Hitzekarte_NRW_heute.jpg # täglich aktualisierte Ausgabe
+├── Hitzekarte_NRW_heute.jpg # Daily updated output image
 └── .github/workflows/
     └── hitzekarte.yml       # GitHub Actions Workflow (cron 08:15 UTC)
 ```
 
-## Datenquellen
+## Data Sources
 
-| Datensatz | Quelle |
+| Dataset | Source |
 |-----------|--------|
-| Hitzewarnungen (täglich) | [DWD Open Data – Heat Forecasts](https://opendata.dwd.de/climate_environment/health/forecasts/heat/) |
-| Formatbeschreibung hwtrend JSON | [Beschreibung_hwtrend_json.pdf](https://opendata.dwd.de/climate_environment/health/forecasts/heat/Beschreibung_hwtrend_json.pdf) |
-| Warnkreis-Schlüssel (CCC-Mapping) | [DWD CAP Warncell-IDs (cap_warncellids.csv)](https://www.dwd.de/DE/leistungen/opendata/help/warnungen/cap_warncellids_csv.html) |
-| Satellitenbild | Sentinel-2 Quarterly Mosaics True Color Cloudless, via Sentinel Hub |
-| Kreisgrenzen | BKG – Bundesamt für Kartographie und Geodäsie |
+| Heat Warnings (Daily) | [DWD Open Data – Heat Forecasts](https://opendata.dwd.de/climate_environment/health/forecasts/heat/) |
+| Format Description (hwtrend JSON) | [Beschreibung\_hwtrend\_json.pdf](https://opendata.dwd.de/climate_environment/health/forecasts/heat/Beschreibung_hwtrend_json.pdf) |
+| Warning Cell Mapping (CCC) | [DWD CAP Warncell-IDs (cap\_warncellids.csv)](https://www.dwd.de/DE/leistungen/opendata/help/warnungen/cap_warncellids_csv.html) |
+| Satellite Imagery | Sentinel-2 Quarterly Mosaics True Color Cloudless, via Sentinel Hub |
+| District Boundaries | BKG – Federal Agency for Cartography and Geodesy |
 
-## Lizenz
+## License
 
-**DWD-Daten:** [Creative Commons BY 4.0 (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
+**DWD Data:** [Creative Commons BY 4.0 (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
 
-> Datenbasis: Deutscher Wetterdienst, eigene Elemente ergänzt. Lizenz: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+> Database: Deutscher Wetterdienst (German Weather Service), own elements added. License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 
-Weitere Informationen zu den rechtlichen Hinweisen des DWD: [dwd.de/rechtliche_hinweise](https://www.dwd.de/DE/service/rechtliche_hinweise/rechtliche_hinweise_node.html)
+Further information regarding DWD legal notices: [dwd.de/legal\_notices](https://www.dwd.de/DE/service/rechtliche_hinweise/rechtliche_hinweise_node.html)
